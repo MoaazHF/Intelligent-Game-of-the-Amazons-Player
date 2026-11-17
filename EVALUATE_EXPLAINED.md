@@ -1,4 +1,5 @@
 # `evaluate.py` — Complete Visual & Algorithmic Guide
+
 **Owner:** Marwan  
 **Module Purpose:** Heuristic Evaluation Function (Multi-Source BFS Territory + Mobility)  
 **Interface Function Called by Search (`search.py`):** `evaluate(state, color)`
@@ -7,9 +8,9 @@
 
 ## 1. The Big Picture: Why `evaluate.py` Exists
 
-In the **Game of the Amazons**, the $10 \times 10$ board has **2,176 legal moves on the very first turn**. Because the game tree is far too massive for Hazem's Minimax/Alpha-Beta search (`search.py`) to search all the way to the end of the game, the search must stop after looking $d$ turns into the future (for example, depth 2 or 3).
+In the **Game of the Amazons**, the 10x10 board has **2,176 legal moves on the very first turn**. Because the game tree is far too massive for Hazem's Minimax/Alpha-Beta search (`search.py`) to search all the way to the end of the game, the search must stop after looking `d` turns into the future (for example, depth 2 or 3).
 
-When the search stops at depth $d$, the game is still going on. The AI needs a way to look at that imagined mid-game board and ask: **"Am I winning or losing on this board, and by how much?"**
+When the search stops at depth `d`, the game is still going on. The AI needs a way to look at that imagined mid-game board and ask: **"Am I winning or losing on this board, and by how much?"**
 
 That is the job of `evaluate(state, color)`:
 * **Input:** A board snapshot (`state`) and the AI's piece color (`color`, either `WHITE` or `BLACK`).
@@ -26,24 +27,27 @@ Whenever `evaluate(state, color)` is called, the data flows through our 4 functi
 
 ```text
                   evaluate(state, color, w1=1.0, w2=0.2)
-                                    │
-        ┌───────────────────────────┴───────────────────────────┐
-        ▼                                                       ▼
+                                    |
+        +---------------------------+---------------------------+
+        |                                                       |
+        v                                                       v
 1. _find_amazons(cells, color)                   1. _find_amazons(cells, opponent)
    Finds [(r,c), ...] for our 4 Queens              Finds [(r,c), ...] for enemy's 4 Queens
-        │                                                       │
-        ├───────────────────────────┬───────────────────────────┤
-        ▼                           │                           ▼
-2. _mobility_for_color(...)         │            3. _queen_bfs_distances(...)
-   Counts 1-move Queen slides       │               Builds 10x10 grid of minimum moves
-   for my_amazons & opp_amazons     │               needed to reach every empty square
-        │                           │                           │
-        ▼                           │                           ▼
-   TOTAL_mobility =                 │               territory = (Squares I reach faster)
-   my_mobility - opp_mobility       │                         - (Squares enemy reaches faster)
-        │                           │                           │
-        └───────────────────────────┼───────────────────────────┘
-                                    ▼
+        |                                                       |
+        +---------------------------+---------------------------+
+        |                           |                           |
+        v                           |                           v
+2. _mobility_for_color(...)         |            3. _queen_bfs_distances(...)
+   Counts 1-move Queen slides       |               Builds 10x10 grid of minimum moves
+   for my_amazons & opp_amazons     |               needed to reach every empty square
+        |                           |                           |
+        v                           |                           v
+   TOTAL_mobility =                 |               territory = (Squares I reach faster)
+   my_mobility - opp_mobility       |                         - (Squares enemy reaches faster)
+        |                           |                           |
+        +---------------------------+---------------------------+
+                                    |
+                                    v
               Final Score = (w1 * territory) + (w2 * TOTAL_mobility)
 ```
 
@@ -60,7 +64,7 @@ INF = 999999
 ```
 
 ### What Each Term Means:
-* **`deque` (Double-Ended Queue):** Imported from Python's `collections` library. Unlike a normal Python list where removing the first item (`pop(0)`) is slow ($O(N)$) because every other item has to shift left, `deque.popleft()` is instant ($O(1)$). We use it as our First-In, First-Out (FIFO) queue for Breadth-First Search (BFS).
+* **`deque` (Double-Ended Queue):** Imported from Python's `collections` library. Unlike a normal Python list where removing the first item (`pop(0)`) is slow (`O(N)`) because every other item has to shift left, `deque.popleft()` is instant (`O(1)`). We use it as our First-In, First-Out (FIFO) queue for Breadth-First Search (BFS).
 * **`EMPTY (0)`, `WHITE (1)`, `BLACK (2)`, `ARROW (3)`:** The agreed team constants from `game_state.py` that represent what is inside each cell of `state.cells[r][c]`.
 * **`Directions`:** The 8 compass directions a Queen (Amazon) can slide along on a 2D grid. Each tuple is `(direction_r, direction_c)`:
 
@@ -68,11 +72,12 @@ INF = 999999
           (-1, -1)   (-1, 0)   (-1, +1)
               \         |         /
                \        |        /
-     (0, -1) ◄──  [ QUEEN (r,c) ]  ──► (0, +1)
+     (0, -1) <--  [ QUEEN (r,c) ]  --> (0, +1)
                /        |        \
               /         |         \
           (+1, -1)   (+1, 0)   (+1, +1)
 ```
+
 * **`INF = 999999`:** Stands for **Infinity**. When we build our distance map in BFS, every square starts at `999999` to mean *"Unvisited / Unreachable"*. If a square is completely walled off by arrows so no Queen can ever enter it, its distance stays `999999`.
 
 ---
@@ -91,13 +96,13 @@ def _find_amazons(cells, color):
 ```
 
 ### Visualization & Purpose
-Think of this function as a **radar scan** across the entire $10 \times 10$ board. Before we can measure how many moves a player has or run BFS from their pieces, we need to know the exact `(row, column)` coordinates where their 4 Amazons are currently standing.
+Think of this function as a **radar scan** across the entire 10x10 board. Before we can measure how many moves a player has or run BFS from their pieces, we need to know the exact `(row, column)` coordinates where their 4 Amazons are currently standing.
 
 ### Variable Breakdown
 * **`cells`**: The 2D list (`10x10`) representing the board.
 * **`color`**: The player we are scanning for (`WHITE` or `BLACK`).
 * **`Positions`**: An empty list `[]` that collects the `(r, c)` coordinates of every Amazon matching `color`.
-* **`size`**: `len(cells)`, which is `10` on a standard board (or `4` on a $4 \times 4$ test board). Using `len(cells)` instead of hardcoding `10` allows our code to work on any test board size.
+* **`size`**: `len(cells)`, which is `10` on a standard board (or `4` on a 4x4 test board). Using `len(cells)` instead of hardcoding `10` allows our code to work on any test board size.
 * **`r` and `c`**: Loop variables scanning every row (`0` to `size - 1`) and every column (`0` to `size - 1`).
 
 ---
@@ -128,7 +133,7 @@ Instead, imagine standing on each Amazon's square `(start_r, start_c)` and shini
 
 ```text
 Example of scanning Right (0, +1) from a White Queen (W):
-[ W ] ──► [ . ] ──► [ . ] ──► [ . ] ──► [ X (Arrow) ]
+[ W ] --> [ . ] --> [ . ] --> [ . ] --> [ X (Arrow) ]
           +1        +2        +3        STOP! (Blocked by Arrow)
 ```
 
@@ -225,43 +230,53 @@ def evaluate(state, color, w1=1.0, w2=0.2):
 ### Step-by-Step Visualization of `evaluate`:
 1. **Identify Perspective (`color` vs `opponent`):** Hazem's `search.py` tells us which color the AI is playing (`color`). We set `opponent` to the other color so our final score is always positive when `color` is winning.
 2. **Calculate Net Mobility (`TOTAL_mobility`):**
-   $$\text{TOTAL\_mobility} = \text{my\_mobility} - \text{opp\_mobility}$$
+   `TOTAL_mobility = my_mobility - opp_mobility`
    If my 4 Queens have 35 immediate moves and the opponent's 4 Queens have 20 immediate moves, `TOTAL_mobility = +15`.
 3. **Compare the Two BFS Maps to Count `territory`:**
    We call `_queen_bfs_distances` twice: once for `my_amazons` (creating the `my_dist` grid) and once for `opp_amazons` (creating the `opp_dist` grid). Then we compare them square-by-square across every `EMPTY` cell:
-   * **`my_dist[row][column] < opp_dist[row][column]`:** My Queen can reach this empty square in fewer moves than the opponent (e.g., I reach it in `1` move, opponent needs `2` moves, or opponent is blocked at `INF`). I own this square $\rightarrow$ `territory += 1`.
-   * **`opp_dist[row][column] < my_dist[row][column]`:** The opponent reaches this empty square in fewer moves $\rightarrow$ `territory -= 1`.
+   * **`my_dist[row][column] < opp_dist[row][column]`:** My Queen can reach this empty square in fewer moves than the opponent (e.g., I reach it in `1` move, opponent needs `2` moves, or opponent is blocked at `INF`). I own this square -> `territory += 1`.
+   * **`opp_dist[row][column] < my_dist[row][column]`:** The opponent reaches this empty square in fewer moves -> `territory -= 1`.
    * **Tie (`my_dist == opp_dist`):** Either both players reach it in the same number of moves (contested square) or neither player can reach it (`INF == INF`). Neither side gets points (`+0`).
 4. **Combine with Weights (`w1` and `w2`):**
-   $$\text{Score} = (w_1 \times \text{territory}) + (w_2 \times \text{TOTAL\_mobility})$$
+   `Score = (w1 * territory) + (w2 * TOTAL_mobility)`
    * **Why is `w1 = 1.0` larger than `w2 = 0.2`?** Because Territory is the primary winning condition in Amazons (controlling more squares guarantees you outlast the opponent in the endgame), while Mobility (`0.2`) acts as an early/mid-game helper that stops the AI from letting its Queens get boxed in before the board is partitioned.
 
 ---
 
-## 8. Worked Hand-Made $4 \times 4$ Example (For Testing & Report Diagram)
+## 8. Worked Hand-Made 4x4 Example (For Testing & Report Diagram)
 
-Consider this $4 \times 4$ board where **Black (`B`) at `(0, 3)` is walled into the top-right corner** by 3 Arrows (`X`), and **White (`W`) is at `(2, 1)`**:
+Consider this 4x4 board where **Black (`B`) at `(0, 3)` is walled into the top-right corner** by 3 Arrows (`X`), and **White (`W`) is at `(2, 1)`**:
 
 ### 1. The Board (`state.cells`)
-| Row \ Col | Col 0 | Col 1 | Col 2 | Col 3 |
+
+| Row / Col | Col 0 | Col 1 | Col 2 | Col 3 |
 | :---: | :---: | :---: | :---: | :---: |
 | **Row 0** | `.` | `.` | `X` | **`B`** |
 | **Row 1** | `.` | `.` | `X` | `X` |
 | **Row 2** | `.` | **`W`** | `.` | `.` |
 | **Row 3** | `.` | `.` | `.` | `.` |
 
-### 2. White's BFS Distance Grid (`my_dist`) vs. Black's BFS Distance Grid (`opp_dist`)
-* **White (`W` at `2,1`):** Reaches 9 empty squares in `1` Queen move, and reaches the remaining 2 corners `(0,0)` and `(3,3)` in `2` Queen moves.
-* **Black (`B` at `0,3`):** Surrounded by Arrows at `(0,2)`, `(1,2)`, and `(1,3)`. Cannot move anywhere, so every empty square has distance `INF`.
+### 2. White's BFS Distance Grid (`my_dist`)
+White (`W` at `2,1`) reaches 9 empty squares in `1` Queen move, and reaches the remaining 2 corners `(0,0)` and `(3,3)` in `2` Queen moves:
 
-| `my_dist` (White) | C0 | C1 | C2 | C3 | | `opp_dist` (Black) | C0 | C1 | C2 | C3 |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **R0** | `2` | `1` | `INF` | `INF` | | **R0** | `INF` | `INF` | `INF` | **`0`** |
-| **R1** | `1` | `1` | `INF` | `INF` | | **R1** | `INF` | `INF` | `INF` | `INF` |
-| **R2** | `1` | **`0`** | `1` | `1` | | **R2** | `INF` | `INF` | `INF` | `INF` |
-| **R3** | `1` | `1` | `1` | `2` | | **R3** | `INF` | `INF` | `INF` | `INF` |
+| `my_dist` (White) | Col 0 | Col 1 | Col 2 | Col 3 |
+| :---: | :---: | :---: | :---: | :---: |
+| **Row 0** | `2` | `1` | `INF` | `INF` |
+| **Row 1** | `1` | `1` | `INF` | `INF` |
+| **Row 2** | `1` | **`0`** | `1` | `1` |
+| **Row 3** | `1` | `1` | `1` | `2` |
 
-### 3. Final Calculation on This Board (`color = WHITE`)
-* **`my_mobility`** = `9` squares (all the `1`s in `my_dist`), **`opp_mobility`** = `0` squares $\rightarrow$ **`TOTAL_mobility` = `9`**.
-* **`territory`** = White has `< INF` on all `11` empty squares $\rightarrow$ **`territory` = `11`**.
-* **`evaluate(state, WHITE)`** = $(1.0 \times 11) + (0.2 \times 9) = 11.0 + 1.8 = \mathbf{12.8}$.
+### 3. Black's BFS Distance Grid (`opp_dist`)
+Black (`B` at `0,3`) is surrounded by Arrows at `(0,2)`, `(1,2)`, and `(1,3)`. It cannot move anywhere, so every empty square has distance `INF`:
+
+| `opp_dist` (Black) | Col 0 | Col 1 | Col 2 | Col 3 |
+| :---: | :---: | :---: | :---: | :---: |
+| **Row 0** | `INF` | `INF` | `INF` | **`0`** |
+| **Row 1** | `INF` | `INF` | `INF` | `INF` |
+| **Row 2** | `INF` | `INF` | `INF` | `INF` |
+| **Row 3** | `INF` | `INF` | `INF` | `INF` |
+
+### 4. Final Calculation on This Board (`color = WHITE`)
+* **`my_mobility`** = `9` squares (all the `1`s in `my_dist`), **`opp_mobility`** = `0` squares -> **`TOTAL_mobility` = `9`**.
+* **`territory`** = White has `< INF` on all `11` empty squares -> **`territory` = `11`**.
+* **`evaluate(state, WHITE)`** = `(1.0 * 11) + (0.2 * 9) = 11.0 + 1.8 = 12.8`.
