@@ -1,5 +1,5 @@
 from collections import deque
-from game_state import EMPTY, WHITE, BLACK, ARROW
+from game_state import EMPTY, WHITE, BLACK, ARROW, SIZE
 
 Directions = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
 
@@ -10,10 +10,10 @@ Directions = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 
 
 def _find_amazons(cells, color):
     Positions = []
-    size = len(cells)
+    size = SIZE  # the board is a flat list of 100 cells: cell = row * 10 + col
     for r in range(size):
         for c in range(size):
-            if cells[r][c] == color:
+            if cells[r * size + c] == color:
                 Positions.append((r, c))
     return Positions
 
@@ -31,14 +31,14 @@ def _find_amazons(cells, color):
 
 
 def _mobility_for_color(cells, amazon_positions):
-    size = len(cells)
+    size = SIZE  # the board is a flat list of 100 cells: cell = row * 10 + col
     moves_count = 0
     for start_r, start_c in amazon_positions:
         for direction_r, direction_c in Directions:
             row = start_r + direction_r
             column = start_c + direction_c
 
-            while  0 <= row < size and 0 <= column < size and cells[row][column] == EMPTY:
+            while  0 <= row < size and 0 <= column < size and cells[row * size + column] == EMPTY:
                 moves_count = moves_count + 1
                 row += direction_r
                 column += direction_c
@@ -63,7 +63,7 @@ INF = 999999   # CONSTANT FOR UNVISITED SQUARES
 
 def _queen_bfs_distances(cells, amazon_positions):
 
-    size = len(cells)
+    size = SIZE  # the board is a flat list of 100 cells: cell = row * 10 + col
     dist = [[INF for _ in range(size)] for _ in range(size)]
 
     queue = deque()
@@ -81,7 +81,7 @@ def _queen_bfs_distances(cells, amazon_positions):
             row = current_r + direction_r
             column = current_c + direction_c
 
-            while 0 <= row < size and 0 <= column < size and cells[row][column] == EMPTY:
+            while 0 <= row < size and 0 <= column < size and cells[row * size + column] == EMPTY:
                 
                 if dist[row][column] == INF:
                     dist[row][column] = next_distance
@@ -105,14 +105,18 @@ def _queen_bfs_distances(cells, amazon_positions):
 
 
 
-def evaluate(state, color, w1=1.0, w2=0.2):
+W1 = 1.0   # weight of territory (experiments.py changes these to compare weights)
+W2 = 0.2   # weight of mobility
+
+
+def evaluate(state, color):
 
     if color == WHITE:
         opponent = BLACK
     else: opponent = WHITE
 
     cells = state.cells
-    size =len(cells)
+    size = SIZE  # the board is a flat list of 100 cells: cell = row * 10 + col
 
     my_amazons = _find_amazons(cells, color)
     opp_amazons = _find_amazons(cells, opponent)
@@ -125,10 +129,10 @@ def evaluate(state, color, w1=1.0, w2=0.2):
     territory = 0
     for row in range(size):
         for column in range(size):
-            if cells[row][column] == EMPTY:
+            if cells[row * size + column] == EMPTY:
                 if my_dist[row][column] < opp_dist[row][column]:
                     territory = territory + 1
                 elif opp_dist[row][column] < my_dist[row][column]:
                     territory = territory -1
 
-    return w1 * territory + w2 * TOTAL_mobility
+    return W1 * territory + W2 * TOTAL_mobility
