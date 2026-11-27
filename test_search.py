@@ -85,7 +85,7 @@ def test_ordering_reduces_nodes():
 
 def test_state_restored_after_search():
     s = FakeState(3)
-    search.best_move(s, 0.2, max_depth=3, evaluate_fn=fake_eval)
+    search.best_move(s, 0.2, max_depth=3, evaluate_fn=fake_eval, order_fn=fake_order)
     assert s.path == () and s.turn == "W"
 
 
@@ -96,7 +96,7 @@ def test_time_limit_respected_and_state_restored():
 
     s = FakeState(4)
     t0 = time.perf_counter()
-    mv = search.best_move(s, 0.3, evaluate_fn=slow_eval)
+    mv = search.best_move(s, 0.3, evaluate_fn=slow_eval, order_fn=fake_order)
     elapsed = time.perf_counter() - t0
     assert elapsed < 0.6
     assert mv in range(BRANCH)
@@ -106,15 +106,15 @@ def test_time_limit_respected_and_state_restored():
 def test_deeper_with_more_time():
     s = FakeState(5)
     a, b = {}, {}
-    search.best_move(s, 0.05, evaluate_fn=fake_eval, stats=a)
-    search.best_move(s, 0.5, evaluate_fn=fake_eval, stats=b)
+    search.best_move(s, 0.05, evaluate_fn=fake_eval, stats=a, order_fn=fake_order)
+    search.best_move(s, 0.5, evaluate_fn=fake_eval, stats=b, order_fn=fake_order)
     assert b["depth"] >= a["depth"] >= 1
 
 
 def test_no_moves_returns_none():
     s = FakeState()
     s.path = (0,) * TREE_DEPTH
-    assert search.best_move(s, 0.1, evaluate_fn=fake_eval) is None
+    assert search.best_move(s, 0.1, evaluate_fn=fake_eval, order_fn=fake_order) is None
 
 
 def test_finds_forced_win():
@@ -127,4 +127,4 @@ def test_finds_forced_win():
             return list(range(BRANCH)) if len(self.path) < 4 else []
 
     s = WinState()
-    assert search.best_move(s, 1.0, evaluate_fn=lambda st, c: 0) == 3
+    assert search.best_move(s, 1.0, evaluate_fn=lambda st, c: 0, order_fn=fake_order) == 3

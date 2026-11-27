@@ -1,0 +1,3 @@
+opponent,games,ai_win_rate
+vs random,10,1.0
+vs depth-1 greedy,10,1.0

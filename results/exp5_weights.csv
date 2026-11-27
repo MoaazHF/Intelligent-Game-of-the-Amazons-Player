@@ -1,0 +1,4 @@
+weights,games,win_rate_vs_greedy
+territory only,10,1.0
+mobility only,10,0.0
+both,10,1.0
