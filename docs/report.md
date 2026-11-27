@@ -223,12 +223,13 @@ The `.excalidraw` files open at excalidraw.com (menu, Open) for editing.
 
 Run:
 
+Setup differs by operating system (on Ubuntu the command is `python3`, on Windows `py`); the README gives the steps for each. After the virtual environment is active:
+
 ```
-pip install -r requirements.txt
 python gui.py                    # window
 python play.py human ai          # terminal; players: human, ai, random
 python experiments.py            # all experiments, results in results/
-pytest                           # tests
+python -m pytest                 # tests
 ```
 
 ## References

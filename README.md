@@ -80,13 +80,35 @@ A cell is `row * 10 + col` (0 to 99). A move is `(from_cell, to_cell, arrow_cell
 
 ## Run
 
+Needs Python 3.11 or later with tkinter. The command name differs by system: Ubuntu has only `python3`, Windows has `py` (and `python`). Create a virtual environment once; while it is active, `python` works the same on both.
+
+Ubuntu:
+
 ```
+sudo apt install python3-tk python3-venv
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
+```
+
+Windows (PowerShell; tkinter is included in the python.org installer):
+
+```
+py -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+Then, with the environment active (`(.venv)` shows in the prompt):
+
+```
 python gui.py                    # window: human vs AI, AI vs AI, random player
 python play.py human ai          # terminal; players: human, ai, random
 python experiments.py            # five experiments, CSV and charts in results/
-pytest                           # tests
+python -m pytest                 # tests
 ```
+
+In a new terminal, activate the environment again first (`source .venv/bin/activate`, or `.venv\Scripts\Activate.ps1` on Windows).
 
 ## Report and diagrams
 
