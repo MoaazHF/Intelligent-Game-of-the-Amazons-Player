@@ -86,6 +86,7 @@ class AmazonsApp:
         if self.state.is_over():
             winner = "Black" if self.state.turn == WHITE else "White"
             self.status.config(text=f"Game over: {side} has no legal move. {winner} wins.")
+            self.draw_result(side, winner)
             return
         self.moves = self.state.legal_moves()
         kind = self.player[self.state.turn].get()
@@ -184,11 +185,37 @@ class AmazonsApp:
                               fill="white" if piece == WHITE else "black",
                               outline="#1e88e5" if cell in (self.sel_from, self.sel_to) else "#333")
             elif piece == ARROW:
-                p = 15
-                c.create_rectangle(x + p, y + p, x + SQ - p, y + SQ - p, fill="#5a3e2b", outline="")
+                self.draw_sword(x, y)
         for i in range(SIZE):
             c.create_text(MARGIN + i * SQ + SQ // 2, MARGIN // 2, text="abcdefghij"[i])
             c.create_text(MARGIN // 2, MARGIN + i * SQ + SQ // 2, text=str(SIZE - i))
+
+    def draw_result(self, loser, winner):
+        """Banner across the board. A single human player is told directly that they won or lost."""
+        humans = [c for c in (WHITE, BLACK) if self.player[c].get() == "Human"]
+        title = f"{winner} wins"
+        if len(humans) == 1:
+            title = "You lose" if self.state.turn == humans[0] else "You win"
+        mid, w = MARGIN + SIZE * SQ // 2, SIZE * SQ
+        self.canvas.create_rectangle(MARGIN, mid - 55, MARGIN + w, mid + 55,
+                                     fill="#263238", outline="")
+        self.canvas.create_text(mid, mid - 15, text=title, fill="white", font=("Helvetica", 28, "bold"))
+        self.canvas.create_text(mid, mid + 25, fill="white", font=("Helvetica", 13),
+                                text=f"{loser} has no legal move.  Press New game to play again.")
+
+    def draw_sword(self, x, y):
+        """A blocked square: a sword lying diagonally, tip at the top right."""
+        c = self.canvas
+        tip = (x + SQ - 9, y + 9)
+        guard = (x + 21, y + SQ - 21)
+        pommel = (x + 11, y + SQ - 11)
+        c.create_line(*tip, *guard, width=8, fill="#37474f", capstyle="round")    # blade edge
+        c.create_line(*tip, *guard, width=5, fill="#cfd8dc", capstyle="round")    # blade
+        c.create_line(guard[0] - 8, guard[1] - 8, guard[0] + 8, guard[1] + 8,
+                      width=4, fill="#b8860b", capstyle="round")                  # cross-guard
+        c.create_line(*guard, *pommel, width=4, fill="#5d4037")                   # grip
+        c.create_oval(pommel[0] - 3, pommel[1] - 3, pommel[0] + 3, pommel[1] + 3,
+                      fill="#b8860b", outline="")                                 # pommel
 
 
 def main():
