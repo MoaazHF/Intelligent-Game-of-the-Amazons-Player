@@ -25,8 +25,8 @@ EXP3_TIME_LIMITS = (0.1, 0.25, 0.5, 1.0, 2.0)
 AI_TIME_LIMIT = 0.3          # seconds per AI move in games (exp 4 and 5)
 
 # Experiment 5: (name, territory weight, mobility weight).
-# Change "both" to the real weights Marwan uses in evaluate.py.
-WEIGHT_SETS = [("territory only", 1, 0), ("mobility only", 0, 1), ("both", 1, 1)]
+# "both" uses the weights in evaluate.py (W1 = 1.0, W2 = 0.2).
+WEIGHT_SETS = [("territory only", 1, 0), ("mobility only", 0, 1), ("both", 1, 0.2)]
 
 
 # ----------------------------------------------------------------- helpers

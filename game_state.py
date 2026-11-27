@@ -29,6 +29,28 @@ WHITE_START = [60, 93, 96, 69]
 BLACK_START = [30, 3, 6, 39]
 
 
+def cell_name(cell):
+    """Board name of a cell: columns a-j left to right, rows 10-1 top to bottom (cell 0 = a10)."""
+    r, c = divmod(cell, SIZE)
+    return "abcdefghij"[c] + str(SIZE - r)
+
+
+def parse_cell(name):
+    """Inverse of cell_name: 'a10' -> 0, 'j1' -> 99. Raises ValueError on bad input."""
+    name = name.strip().lower()
+    c = "abcdefghij".find(name[:1])
+    r = SIZE - int(name[1:])
+    if c < 0 or not 0 <= r < SIZE:
+        raise ValueError(f"not a cell: {name!r}")
+    return r * SIZE + c
+
+
+def move_name(move):
+    """Standard Amazons notation: 'd1-d7/g7' (from-to/arrow)."""
+    frm, to, arrow = move
+    return f"{cell_name(frm)}-{cell_name(to)}/{cell_name(arrow)}"
+
+
 class GameState:
     def __init__(self):
         self.cells = [EMPTY] * (SIZE * SIZE)  # what is on each of the 100 squares

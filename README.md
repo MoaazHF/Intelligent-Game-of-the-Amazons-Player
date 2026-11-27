@@ -82,6 +82,13 @@ A cell is `row * 10 + col` (0 to 99). A move is `(from_cell, to_cell, arrow_cell
 
 ```
 pip install -r requirements.txt
-python gui.py
-pytest
+python gui.py                    # window: human vs AI, AI vs AI, random player
+python play.py human ai          # terminal; players: human, ai, random
+python experiments.py            # five experiments, CSV and charts in results/
+pytest                           # tests
 ```
+
+## Report and diagrams
+
+- Report: [docs/report.md](docs/report.md)
+- Diagrams: [docs/diagrams/](docs/diagrams/), each as an `.excalidraw` source (open at excalidraw.com) and an `.svg` copy.
